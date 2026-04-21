@@ -1,23 +1,46 @@
-import logo from './logo.svg';
-import './App.css';
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./App.css";
+
+import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
+import StatsCards from "./components/StatsCards";
+import BookingForm from "./components/BookingForm";
+import BookingList from "./components/BookingList";
+
+import { useEffect, useState } from "react";
+import BookingService from "./services/BookingService";
 
 function App() {
+  const [bookings, setBookings] = useState([]);
+
+  const loadBookings = async () => {
+    const res = await BookingService.getAll();
+    setBookings(res.data);
+  };
+
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app-wrapper">
+      <Sidebar />
+
+      <div className="main-area">
+        <Header />
+
+        <StatsCards bookings={bookings} />
+
+        <div className="row mt-3">
+          <div className="col-md-4">
+            <BookingForm refresh={loadBookings} />
+          </div>
+
+          <div className="col-md-8">
+            <BookingList bookings={bookings} refresh={loadBookings} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

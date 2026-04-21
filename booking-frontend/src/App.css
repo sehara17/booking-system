@@ -1,38 +1,75 @@
-.App {
-  text-align: center;
+body {
+  background: #f5f7fb;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.app-wrapper {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background: #111827;
   color: white;
+  padding: 20px;
 }
 
-.App-link {
-  color: #61dafb;
+.sidebar h4 {
+  color: #00d4ff;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.sidebar-item {
+  margin: 15px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* MAIN */
+.main-area {
+  flex: 1;
+  padding: 20px;
+}
+
+/* CARDS */
+.card-box {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
+}
+
+/* STATUS COLORS (FIXED FOR VISIBILITY ⭐) */
+.status-pending {
+  background: #fff4cc;
+  color: #8a6d00;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.status-approved {
+  background: #d4f8d4;
+  color: #1b5e20;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.status-rejected {
+  background: #ffd6d6;
+  color: #b71c1c;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.status-cancelled {
+  background: #d6eaff;
+  color: #0d47a1;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-weight: bold;
 }

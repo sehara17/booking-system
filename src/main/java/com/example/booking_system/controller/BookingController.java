@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/bookings")
 public class BookingController {
@@ -17,7 +18,7 @@ public class BookingController {
     }
 
     
-    @GetMapping("/")
+    @GetMapping("/status")
     public String home() {
         return "Booking System is running on port 8090!";
     }
