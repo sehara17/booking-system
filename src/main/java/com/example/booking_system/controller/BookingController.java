@@ -16,6 +16,12 @@ public class BookingController {
         this.service = service;
     }
 
+    
+    @GetMapping("/")
+    public String home() {
+        return "Booking System is running on port 8090!";
+    }
+
     @PostMapping
     public Booking create(@RequestBody Booking booking) {
         return service.createBooking(booking);
@@ -41,3 +47,4 @@ public class BookingController {
         return service.cancelBooking(id);
     }
 }
+
