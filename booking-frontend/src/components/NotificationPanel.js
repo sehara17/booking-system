@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import NotificationService from "../services/NotificationService";
 
 const NotificationPanel = ({ session }) => {
   const [notifications, setNotifications] = useState([]);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     const res = await NotificationService.getNotifications(session);
     setNotifications(res.data);
-  };
+  }, [session]);
 
   useEffect(() => {
     fetchNotifications();
-  }, [session.email, session.role]);
+  }, [fetchNotifications]);
 
   const markRead = async (id) => {
     await NotificationService.markRead(id, session);

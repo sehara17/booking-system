@@ -11,7 +11,7 @@ import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
-@RequestMapping("/api/bookings")
+@RequestMapping({"/api/bookings", "/bookings"})
 public class BookingController {
 
     private final BookingService service;
@@ -86,8 +86,8 @@ public class BookingController {
     }
 
     private void requireRole(String roleHeader, Role expectedRole) {
-        if (roleHeader == null || !roleHeader.equalsIgnoreCase(expectedRole.name())) {
-            throw new IllegalStateException("Access denied. Expected role: " + expectedRole.name());
-        }
+    if (roleHeader == null || !roleHeader.equalsIgnoreCase(expectedRole.name())) {
+        throw new RuntimeException("Access denied. Expected role: " + expectedRole.name());
     }
+}
 }

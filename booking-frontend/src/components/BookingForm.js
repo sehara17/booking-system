@@ -10,8 +10,19 @@ function BookingForm({ refresh, session }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const submit = async () => {
+  const submit = async (event) => {
+    event.preventDefault();
     setError("");
+
+    if (!resourceName.trim() || !purpose.trim() || !startTime || !endTime) {
+      setError("Please complete all required fields before submitting.");
+      return;
+    }
+
+    if (new Date(endTime) <= new Date(startTime)) {
+      setError("End time must be later than start time.");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -40,22 +51,22 @@ function BookingForm({ refresh, session }) {
   };
 
   return (
-    <div className="card-box form-card booking-form-card">
-      <div className="section-heading">
-        <p className="section-label">New request</p>
-        <h5>Create booking request</h5>
+    <form className="card-box form-card booking-form-card" onSubmit={submit}>
+      <div className="section-heading booking-form-head">
+        <p className="section-label">Booking request</p>
+        <h5>Create a new booking</h5>
+        <p className="booking-form-hint">
+          Fill in resource details and timing. Overlap checks happen automatically before approval.
+        </p>
       </div>
-
-      <p className="section-copy">
-        Submit a room or resource request with time details. Conflict checking happens automatically.
-      </p>
 
       {error && <div className="form-alert">{error}</div>}
 
       <div className="form-grid">
-        <div className="form-field">
-          <label>Resource name</label>
+        <div className="form-field form-field-wide">
+          <label htmlFor="resourceName">Resource name</label>
           <input
+            id="resourceName"
             className="form-control form-control-lg"
             placeholder="Conference Hall A"
             value={resourceName}
@@ -63,9 +74,10 @@ function BookingForm({ refresh, session }) {
           />
         </div>
 
-        <div className="form-field">
-          <label>Purpose</label>
+        <div className="form-field form-field-wide">
+          <label htmlFor="purpose">Purpose</label>
           <input
+            id="purpose"
             className="form-control form-control-lg"
             placeholder="Team meeting, seminar, workshop"
             value={purpose}
@@ -74,8 +86,9 @@ function BookingForm({ refresh, session }) {
         </div>
 
         <div className="form-field">
-          <label>Start time</label>
+          <label htmlFor="startTime">Start time</label>
           <input
+            id="startTime"
             type="datetime-local"
             className="form-control form-control-lg"
             value={startTime}
@@ -84,8 +97,9 @@ function BookingForm({ refresh, session }) {
         </div>
 
         <div className="form-field">
-          <label>End time</label>
+          <label htmlFor="endTime">End time</label>
           <input
+            id="endTime"
             type="datetime-local"
             className="form-control form-control-lg"
             value={endTime}
@@ -94,8 +108,9 @@ function BookingForm({ refresh, session }) {
         </div>
 
         <div className="form-field">
-          <label>Attendees</label>
+          <label htmlFor="attendees">Attendees</label>
           <input
+            id="attendees"
             type="number"
             min="1"
             className="form-control form-control-lg"
@@ -105,10 +120,13 @@ function BookingForm({ refresh, session }) {
         </div>
       </div>
 
-      <button className="btn btn-primary w-100 action-button" onClick={submit} disabled={loading} type="button">
-        {loading ? "Submitting..." : "Create Booking Request"}
-      </button>
-    </div>
+      <div className="booking-submit-row">
+        <p className="submit-meta">Status: request will be sent as pending for admin approval.</p>
+        <button className="btn btn-primary action-button" disabled={loading} type="submit">
+          {loading ? "Submitting..." : "Create booking request"}
+        </button>
+      </div>
+    </form>
   );
 }
 

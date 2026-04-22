@@ -1,7 +1,8 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
+import "react-toastify/dist/ReactToastify.css";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
 import RoleLandingPage from "./pages/RoleLandingPage";
@@ -14,6 +15,7 @@ import ApprovalsPage from "./pages/ApprovalsPage";
 import ReportsPage from "./pages/ReportsPage";
 import BookingService from "./services/BookingService";
 import NotificationPanel from "./components/NotificationPanel";
+import { ToastContainer } from "react-toastify";
 
 function NotificationsPage({ session }) {
   return (
@@ -113,7 +115,7 @@ function App() {
     return { email: savedEmail, role: savedRole };
   });
 
-  const loadBookings = async () => {
+  const loadBookings = useCallback(async () => {
     try {
       const res =
         session.role === "ADMIN"
@@ -123,7 +125,7 @@ function App() {
     } catch (e) {
       setBookings([]);
     }
-  };
+  }, [session]);
 
   const updateSession = (nextSession) => {
     setSession(nextSession);
@@ -139,7 +141,7 @@ function App() {
 
   useEffect(() => {
     loadBookings();
-  }, [session.email, session.role]);
+  }, [loadBookings]);
 
   return (
     <BrowserRouter>
@@ -149,6 +151,15 @@ function App() {
         loadBookings={loadBookings}
         updateSession={updateSession}
         loadSessionRole={loadSessionRole}
+      />
+      <ToastContainer
+        position="top-right"
+        autoClose={2200}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        theme="colored"
       />
     </BrowserRouter>
   );

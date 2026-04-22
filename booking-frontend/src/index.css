@@ -1,6 +1,10 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap");
+
 body {
   margin: 0;
-  font-family: "Segoe UI", "Aptos", "Helvetica Neue", Arial, sans-serif;
+  font-family: "Manrope", "Aptos", "Segoe UI", sans-serif;
+  letter-spacing: 0.004em;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;

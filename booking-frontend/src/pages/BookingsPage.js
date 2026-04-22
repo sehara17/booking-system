@@ -23,15 +23,15 @@ function BookingsPage({ bookings, onRefresh, session }) {
       <div className="row g-3 mt-1 booking-summary-row">
         <div className="col-md-4">
           <div className="card-box page-metric-card">
-            <span>Total requests</span>
-            <strong>{bookings.length}</strong>
+            <span>Pending</span>
+            <strong>{pendingCount}</strong>
           </div>
         </div>
 
         <div className="col-md-4">
           <div className="card-box page-metric-card">
-            <span>Pending</span>
-            <strong>{pendingCount}</strong>
+            <span>Approved</span>
+            <strong>{approvedCount}</strong>
           </div>
         </div>
 

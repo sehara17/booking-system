@@ -3,11 +3,30 @@ import Header from "../components/Header";
 import StatsCards from "../components/StatsCards";
 import BookingList from "../components/BookingList";
 import NotificationPanel from "../components/NotificationPanel";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 function AdminDashboardPage({ bookings, session }) {
   const navigate = useNavigate();
   const pendingBookings = bookings.filter((booking) => booking.status === "PENDING");
   const recentBookings = [...bookings].slice(-4).reverse();
+  const approvedBookings = bookings.filter((booking) => booking.status === "APPROVED").length;
+  const rejectedBookings = bookings.filter((booking) => booking.status === "REJECTED").length;
+  const cancelledBookings = bookings.filter((booking) => booking.status === "CANCELLED").length;
+
+  const queueData = [
+    { name: "Approved", value: approvedBookings },
+    { name: "Pending", value: pendingBookings.length },
+    { name: "Rejected", value: rejectedBookings },
+    { name: "Cancelled", value: cancelledBookings },
+  ];
 
   return (
     <div className="page-stack admin-dashboard-page">
@@ -56,6 +75,24 @@ function AdminDashboardPage({ bookings, session }) {
                 <strong>Reports</strong>
                 <span>Open trends and status metrics</span>
               </button>
+            </div>
+
+            <div className="chart-box mt-3">
+              <ResponsiveContainer width="100%" height={240}>
+                <AreaChart data={queueData} margin={{ left: 0, right: 0, top: 8, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="adminQueueFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2f7dc2" stopOpacity={0.55} />
+                      <stop offset="95%" stopColor="#2f7dc2" stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#d7e1ec" />
+                  <XAxis dataKey="name" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="value" stroke="#2f7dc2" fill="url(#adminQueueFill)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>

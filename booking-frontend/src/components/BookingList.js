@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import BookingService from "../services/BookingService";
+import { toast } from "react-toastify";
 
 function formatDateTime(value) {
   if (!value) return "-";
@@ -7,6 +8,7 @@ function formatDateTime(value) {
   if (Number.isNaN(parsed.getTime())) return value;
 
   return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -45,50 +47,77 @@ function BookingList({
   };
 
   const approve = async (id) => {
-    await BookingService.approve(id, session);
-    refresh();
+    try {
+      await BookingService.approve(id, session);
+      toast.success("Booking Approved");
+      refresh();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Unable to approve booking.");
+    }
   };
 
   const reject = async (id) => {
     const reason = (reasons[id] || "").trim();
     if (!reason) {
-      window.alert("Please give a rejection reason.");
+      toast.warning("Please provide a rejection reason.");
       return;
     }
 
-    await BookingService.reject(id, reason, session);
-    updateReason(id, "");
-    refresh();
+    try {
+      await BookingService.reject(id, reason, session);
+      updateReason(id, "");
+      toast.error("Booking Rejected");
+      refresh();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Unable to reject booking.");
+    }
   };
 
   const cancel = async (id) => {
-    await BookingService.cancel(id, session);
-    refresh();
+    try {
+      await BookingService.cancel(id, session);
+      toast.info("Booking Cancelled");
+      refresh();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Unable to cancel booking.");
+    }
   };
 
   const showActions = mode !== "NONE";
   const showAdminUserColumn = mode === "ADMIN";
   const columnCount = showAdminUserColumn ? 8 : showActions ? 7 : 6;
+  const tableModeClass = showAdminUserColumn ? "is-admin" : showActions ? "is-user" : "is-readonly";
+  const columnLayout = showAdminUserColumn
+    ? [14, 12, 18, 18, 8, 10, 10, 10]
+    : showActions
+      ? [14, 18, 21, 11, 11, 11, 14]
+      : [15, 22, 22, 11, 12, 18];
 
   return (
-    <div className={`card-box table-card ${className}`.trim()}>
+    <div className={`card-box table-card booking-list-card ${className}`.trim()}>
       <div className="section-heading">
         <p className="section-label">{label}</p>
         <h5>{title}</h5>
+        <p className="booking-list-copy">{sortedBookings.length} records shown</p>
       </div>
 
       <div className="table-responsive booking-table-wrap">
-        <table className="table align-middle booking-table">
+        <table className={`table align-middle booking-table ${tableModeClass}`.trim()}>
+          <colgroup>
+            {columnLayout.map((width, index) => (
+              <col key={`${tableModeClass}-col-${index}`} style={{ width: `${width}%` }} />
+            ))}
+          </colgroup>
           <thead>
             <tr>
-              {showAdminUserColumn && <th>User</th>}
-              <th>Resource</th>
-              <th>Time</th>
-              <th>Purpose</th>
-              <th>Attendees</th>
-              <th>Status</th>
-              <th>Reason</th>
-              {showActions && <th>Actions</th>}
+              {showAdminUserColumn && <th className="booking-col-user">User</th>}
+              <th className="booking-col-resource">Resource</th>
+              <th className="booking-col-time">Time</th>
+              <th className="booking-col-purpose">Purpose</th>
+              <th className="booking-col-attendees">Attendees</th>
+              <th className="booking-col-status">Status</th>
+              <th className="booking-col-notes">Notes</th>
+              {showActions && <th className="booking-col-actions">Actions</th>}
             </tr>
           </thead>
 
@@ -108,27 +137,27 @@ function BookingList({
 
                 return (
                   <tr key={booking.id}>
-                    {showAdminUserColumn && <td>{booking.userEmail || "-"}</td>}
-                    <td>{booking.resourceName || booking.resourceId || "-"}</td>
-                    <td>
+                    {showAdminUserColumn && <td className="booking-user-cell booking-col-user">{booking.userEmail || "-"}</td>}
+                    <td className="booking-resource-cell booking-col-resource">{booking.resourceName || booking.resourceId || "-"}</td>
+                    <td className="booking-time-col">
                       <div className="booking-time-cell">
                         <span>{formatDateTime(booking.startTime || booking.date)}</span>
-                        {booking.endTime && <small>to {formatDateTime(booking.endTime)}</small>}
+                        {booking.endTime && <small>Ends {formatDateTime(booking.endTime)}</small>}
                       </div>
                     </td>
-                    <td>{booking.purpose || "-"}</td>
-                    <td>{booking.attendees ?? "-"}</td>
-                    <td>
+                    <td className="booking-purpose-cell booking-col-purpose">{booking.purpose || "-"}</td>
+                    <td className="booking-attendee-cell booking-col-attendees">{booking.attendees ?? "-"}</td>
+                    <td className="booking-status-col">
                       <span className={statusClass(booking.status)}>{booking.status}</span>
                     </td>
-                    <td>
+                    <td className="booking-notes-col">
                       <span className="booking-reason">
                         {booking.rejectionReason ? booking.rejectionReason : "-"}
                       </span>
                     </td>
 
                     {showActions && (
-                      <td>
+                      <td className="booking-actions-cell">
                         {mode === "USER" && (
                           <div className="booking-actions booking-actions-user">
                             {booking.status === "APPROVED" ? (
