@@ -1,10 +1,10 @@
 package com.example.bookingsystem.model;
 
+import com.example.bookingsystem.model.enums.BookingStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -16,12 +16,18 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long resourceId;
-    private Long userId;
+    private String resourceName;
 
-    private LocalDate date;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    private String userEmail;
 
-    private String status; // PENDING, APPROVED, REJECTED, CANCELLED
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+
+    private String purpose;
+    private int attendees;
+
+    @Enumerated(EnumType.STRING)
+    private BookingStatus status = BookingStatus.PENDING;
+
+    private String rejectionReason;
 }

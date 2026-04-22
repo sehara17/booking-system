@@ -1,18 +1,41 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8090/bookings";
+const API = axios.create({
+  baseURL: "http://localhost:8090/api",
+});
+
+const sessionHeaders = (session) => ({
+  "X-User-Email": session.email,
+  "X-User-Role": session.role,
+});
 
 class BookingService {
-  getAll() {
-    return axios.get(BASE_URL);
+  getAll(session) {
+    return API.get("/bookings", { headers: sessionHeaders(session) });
   }
 
-  create(data) {
-    return axios.post(BASE_URL, data);
+  getMine(session) {
+    return API.get("/bookings/my", { headers: sessionHeaders(session) });
   }
 
-  update(id, action) {
-    return axios.put(`${BASE_URL}/${id}/${action}`);
+  getPending(session) {
+    return API.get("/bookings/pending", { headers: sessionHeaders(session) });
+  }
+
+  create(data, session) {
+    return API.post("/bookings", data, { headers: sessionHeaders(session) });
+  }
+
+  approve(id, session) {
+    return API.put(`/bookings/${id}/approve`, {}, { headers: sessionHeaders(session) });
+  }
+
+  reject(id, reason, session) {
+    return API.put(`/bookings/${id}/reject`, { reason }, { headers: sessionHeaders(session) });
+  }
+
+  cancel(id, session) {
+    return API.put(`/bookings/${id}/cancel`, {}, { headers: sessionHeaders(session) });
   }
 }
 
