@@ -1,12 +1,20 @@
 import React, { useCallback, useEffect, useState } from "react";
 import NotificationService from "../services/NotificationService";
+import { toast } from "react-toastify";
 
 const NotificationPanel = ({ session }) => {
   const [notifications, setNotifications] = useState([]);
+  const [loadError, setLoadError] = useState("");
 
   const fetchNotifications = useCallback(async () => {
-    const res = await NotificationService.getNotifications(session);
-    setNotifications(res.data);
+    try {
+      const res = await NotificationService.getNotifications(session);
+      setNotifications(Array.isArray(res.data) ? res.data : []);
+      setLoadError("");
+    } catch (error) {
+      setNotifications([]);
+      setLoadError(error?.response?.data?.message || "Unable to load notifications.");
+    }
   }, [session]);
 
   useEffect(() => {
@@ -14,8 +22,12 @@ const NotificationPanel = ({ session }) => {
   }, [fetchNotifications]);
 
   const markRead = async (id) => {
-    await NotificationService.markRead(id, session);
-    fetchNotifications();
+    try {
+      await NotificationService.markRead(id, session);
+      fetchNotifications();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Unable to mark notification as read.");
+    }
   };
 
   return (
@@ -24,6 +36,8 @@ const NotificationPanel = ({ session }) => {
         <p className="section-label">Alerts</p>
         <h5>Notifications</h5>
       </div>
+
+      {loadError && <p className="section-copy">{loadError}</p>}
 
       {notifications.length === 0 ? (
         <p className="section-copy">No new notifications.</p>

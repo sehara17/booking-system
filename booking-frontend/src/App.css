@@ -728,6 +728,11 @@ body {
   min-width: 1120px;
 }
 
+.booking-table.is-admin-readonly {
+  min-width: 1060px;
+  table-layout: fixed;
+}
+
 .booking-table.is-user {
   min-width: 980px;
   table-layout: fixed;

@@ -13,7 +13,7 @@ import {
   YAxis,
 } from "recharts";
 
-function AdminDashboardPage({ bookings, session }) {
+function AdminDashboardPage({ bookings, session, onRefresh }) {
   const navigate = useNavigate();
   const pendingBookings = bookings.filter((booking) => booking.status === "PENDING");
   const recentBookings = [...bookings].slice(-4).reverse();
@@ -109,9 +109,9 @@ function AdminDashboardPage({ bookings, session }) {
 
       <BookingList
         bookings={recentBookings}
-        refresh={() => {}}
+        refresh={onRefresh}
         session={session}
-        mode="NONE"
+        mode="ADMIN"
         label="Recent requests"
         title="Latest bookings"
         emptyTitle="No recent activity"

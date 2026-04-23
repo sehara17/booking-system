@@ -1,13 +1,20 @@
 import axios from "axios";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8091/api";
+
 const API = axios.create({
-  baseURL: "http://localhost:8090/api",
+  baseURL: API_BASE_URL,
 });
 
-const sessionHeaders = (session) => ({
-  "X-User-Email": session.email,
-  "X-User-Role": session.role,
-});
+const sessionHeaders = (session) => {
+  const email = session?.email || localStorage.getItem("booking.userEmail") || "user@booking.local";
+  const role = (session?.role || localStorage.getItem("booking.userRole") || "USER").toUpperCase();
+
+  return {
+    "X-User-Email": email,
+    "X-User-Role": role,
+  };
+};
 
 class BookingService {
   getAll(session) {
@@ -34,8 +41,20 @@ class BookingService {
     return API.put(`/bookings/${id}/reject`, { reason }, { headers: sessionHeaders(session) });
   }
 
-  cancel(id, session) {
-    return API.put(`/bookings/${id}/cancel`, {}, { headers: sessionHeaders(session) });
+  cancel(id, reason, session) {
+    return API.put(`/bookings/${id}/cancel`, { reason }, { headers: sessionHeaders(session) });
+  }
+
+  delete(id, session) {
+    return API.delete(`/bookings/${id}`, { headers: sessionHeaders(session) });
+  }
+
+  cancelByAdmin(id, reason, session) {
+    return API.put(`/bookings/${id}/cancel/admin`, { reason }, { headers: sessionHeaders(session) });
+  }
+
+  editByAdmin(id, data, session) {
+    return API.patch(`/bookings/${id}`, data, { headers: sessionHeaders(session) });
   }
 }
 

@@ -2,7 +2,7 @@ import Header from "../components/Header";
 import BookingList from "../components/BookingList";
 import { useNavigate } from "react-router-dom";
 
-function AdminBookingsPage({ bookings, session }) {
+function AdminBookingsPage({ bookings, session, onRefresh }) {
   const navigate = useNavigate();
   return (
     <div className="page-stack admin-bookings-page">
@@ -25,7 +25,7 @@ function AdminBookingsPage({ bookings, session }) {
 
         <div className="col-md-4">
           <div className="card-box page-metric-card">
-            <span>Pending</span>
+            <span>Pending approvals</span>
             <strong>{bookings.filter((booking) => booking.status === "PENDING").length}</strong>
           </div>
         </div>
@@ -40,9 +40,9 @@ function AdminBookingsPage({ bookings, session }) {
 
       <BookingList
         bookings={bookings}
-        refresh={() => {}}
+        refresh={onRefresh}
         session={session}
-        mode="NONE"
+        mode="ADMIN"
         label="System-wide view"
         title="All Booking Requests"
         emptyTitle="No bookings available"

@@ -56,8 +56,8 @@ function BookingList({
     }
   };
 
-  const reject = async (id) => {
-    const reason = (reasons[id] || "").trim();
+  const reject = async (id, overrideReason) => {
+    const reason = (overrideReason ?? reasons[id] ?? "").trim();
     if (!reason) {
       toast.warning("Please provide a rejection reason.");
       return;
@@ -73,9 +73,58 @@ function BookingList({
     }
   };
 
-  const cancel = async (id) => {
+  const rejectWithPrompt = async (id) => {
+    const reason = window.prompt("Enter rejection reason:", "");
+    if (reason === null) return;
+    await reject(id, reason);
+  };
+
+  const deleteBooking = async (id) => {
+    const ok = window.confirm("Delete this booking permanently?");
+    if (!ok) return;
+
     try {
-      await BookingService.cancel(id, session);
+      await BookingService.delete(id, session);
+      toast.info("Booking Deleted");
+      refresh();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Unable to delete booking.");
+    }
+  };
+
+  const cancelByAdmin = async (id, overrideReason) => {
+    const reason = (overrideReason ?? reasons[id] ?? "").trim();
+    if (!reason) {
+      toast.warning("Please provide a cancellation reason.");
+      return;
+    }
+
+    try {
+      await BookingService.cancelByAdmin(id, reason, session);
+      updateReason(id, "");
+      toast.info("Booking Cancelled by Admin");
+      refresh();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Unable to cancel booking.");
+    }
+  };
+
+  const cancelByAdminWithPrompt = async (id) => {
+    const reason = window.prompt("Enter cancellation reason:", "");
+    if (reason === null) return;
+    await cancelByAdmin(id, reason);
+  };
+
+  const cancel = async (id) => {
+    const reason = (reasons[id] || "").trim();
+    if (!reason) {
+      toast.warning("Please provide a cancellation reason.");
+      return;
+    }
+
+    try {
+      await BookingService.cancel(id, reason, session);
+      updateReason(id, "");
       toast.info("Booking Cancelled");
       refresh();
     } catch (error) {
@@ -83,12 +132,93 @@ function BookingList({
     }
   };
 
-  const showActions = mode !== "NONE";
-  const showAdminUserColumn = mode === "ADMIN";
+  const editByAdminWithPrompt = async (booking) => {
+    const resourceName = window.prompt("Resource name:", booking.resourceName || "");
+    if (resourceName === null) return;
+
+    const startTime = window.prompt(
+      "Start time (YYYY-MM-DDTHH:mm:ss):",
+      booking.startTime || ""
+    );
+    if (startTime === null) return;
+
+    const endTime = window.prompt(
+      "End time (YYYY-MM-DDTHH:mm:ss):",
+      booking.endTime || ""
+    );
+    if (endTime === null) return;
+
+    const purpose = window.prompt("Purpose:", booking.purpose || "");
+    if (purpose === null) return;
+
+    const attendeesInput = window.prompt("Attendees:", String(booking.attendees ?? 1));
+    if (attendeesInput === null) return;
+
+    const status = window.prompt(
+      "Status (PENDING, APPROVED, REJECTED, CANCELLED):",
+      booking.status || "PENDING"
+    );
+    if (status === null) return;
+
+    let rejectionReason = booking.rejectionReason || "";
+    let cancelReason = booking.cancelReason || "";
+
+    if (status.trim().toUpperCase() === "REJECTED") {
+      const input = window.prompt("Rejection reason:", rejectionReason);
+      if (input === null) return;
+      rejectionReason = input;
+      cancelReason = "";
+    }
+
+    if (status.trim().toUpperCase() === "CANCELLED") {
+      const input = window.prompt("Cancellation reason:", cancelReason || "Cancelled by admin");
+      if (input === null) return;
+      cancelReason = input;
+      rejectionReason = "";
+    }
+
+    const attendees = Number(attendeesInput);
+    if (Number.isNaN(attendees)) {
+      toast.warning("Attendees must be a number.");
+      return;
+    }
+
+    try {
+      await BookingService.editByAdmin(
+        booking.id,
+        {
+          resourceName,
+          startTime,
+          endTime,
+          purpose,
+          attendees,
+          status,
+          rejectionReason,
+          cancelReason,
+        },
+        session
+      );
+      toast.success("Booking updated by admin");
+      refresh();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Unable to edit booking.");
+    }
+  };
+
+  const showActions = mode === "USER" || mode === "ADMIN";
+  const showAdminUserColumn = mode === "ADMIN" || mode === "ADMIN_READONLY";
   const columnCount = showAdminUserColumn ? 8 : showActions ? 7 : 6;
-  const tableModeClass = showAdminUserColumn ? "is-admin" : showActions ? "is-user" : "is-readonly";
+  const tableModeClass = mode === "ADMIN"
+    ? "is-admin"
+    : mode === "ADMIN_READONLY"
+      ? "is-admin-readonly"
+      : showActions
+        ? "is-user"
+        : "is-readonly";
   const columnLayout = showAdminUserColumn
-    ? [14, 12, 18, 18, 8, 10, 10, 10]
+    ? showActions
+      ? [14, 12, 18, 18, 8, 10, 10, 10]
+      : [16, 13, 20, 18, 8, 11, 14]
     : showActions
       ? [14, 18, 21, 11, 11, 11, 14]
       : [15, 22, 22, 11, 12, 18];
@@ -152,7 +282,17 @@ function BookingList({
                     </td>
                     <td className="booking-notes-col">
                       <span className="booking-reason">
-                        {booking.rejectionReason ? booking.rejectionReason : "-"}
+                        {booking.status === "PENDING"
+                          ? "Pending approval"
+                          : booking.status === "APPROVED"
+                            ? "Approved"
+                            : booking.rejectionReason
+                              ? `Rejected: ${booking.rejectionReason}`
+                              : booking.cancelReason
+                                ? `Cancelled: ${booking.cancelReason}`
+                                : booking.status === "CANCELLED"
+                                  ? "Cancelled by user"
+                                  : "-"}
                       </span>
                     </td>
 
@@ -161,13 +301,21 @@ function BookingList({
                         {mode === "USER" && (
                           <div className="booking-actions booking-actions-user">
                             {booking.status === "APPROVED" ? (
-                              <button
-                                className="btn btn-outline-danger btn-sm"
-                                onClick={() => cancel(booking.id)}
-                                type="button"
-                              >
-                                Cancel
-                              </button>
+                              <div className="reject-box">
+                                <input
+                                  className="form-control form-control-sm"
+                                  placeholder="Cancellation reason"
+                                  value={reasons[booking.id] || ""}
+                                  onChange={(e) => updateReason(booking.id, e.target.value)}
+                                />
+                                <button
+                                  className="btn btn-outline-danger btn-sm"
+                                  onClick={() => cancel(booking.id)}
+                                  type="button"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             ) : (
                               <span className="booking-action-hint">
                                 {booking.status === "PENDING" ? "Waiting for approval" : "No action available"}
@@ -188,24 +336,70 @@ function BookingList({
                                   Approve
                                 </button>
 
-                                <div className="reject-box">
-                                  <input
-                                    className="form-control form-control-sm"
-                                    placeholder="Rejection reason"
-                                    value={reasons[booking.id] || ""}
-                                    onChange={(e) => updateReason(booking.id, e.target.value)}
-                                  />
-                                  <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => reject(booking.id)}
-                                    type="button"
-                                  >
-                                    Reject
-                                  </button>
-                                </div>
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => rejectWithPrompt(booking.id)}
+                                  type="button"
+                                >
+                                  Reject
+                                </button>
+
+                                <button
+                                  className="btn btn-outline-danger btn-sm"
+                                  onClick={() => cancelByAdminWithPrompt(booking.id)}
+                                  type="button"
+                                >
+                                  Cancel
+                                </button>
+
+                                <button
+                                  className="btn btn-outline-dark btn-sm"
+                                  onClick={() => deleteBooking(booking.id)}
+                                  type="button"
+                                >
+                                  Delete
+                                </button>
+
+                                <button
+                                  className="btn btn-outline-primary btn-sm"
+                                  onClick={() => editByAdminWithPrompt(booking)}
+                                  type="button"
+                                >
+                                  Edit
+                                </button>
                               </>
                             ) : (
-                              <span className="booking-action-hint">Reviewed</span>
+                              <div className="booking-actions booking-actions-user">
+                                <span className="booking-action-hint">Reviewed</span>
+
+                                <button
+                                  className="btn btn-outline-primary btn-sm"
+                                  onClick={() => editByAdminWithPrompt(booking)}
+                                  type="button"
+                                >
+                                  Edit
+                                </button>
+
+                                {booking.status === "APPROVED" && (
+                                  <button
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() => cancelByAdminWithPrompt(booking.id)}
+                                    type="button"
+                                  >
+                                    Cancel
+                                  </button>
+                                )}
+
+                                {(booking.status === "CANCELLED" || booking.status === "REJECTED" || booking.status === "APPROVED") && (
+                                  <button
+                                    className="btn btn-outline-dark btn-sm"
+                                    onClick={() => deleteBooking(booking.id)}
+                                    type="button"
+                                  >
+                                    Delete
+                                  </button>
+                                )}
+                              </div>
                             )}
                           </div>
                         )}

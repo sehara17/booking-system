@@ -91,8 +91,14 @@ function AppRoutes({ session, bookings, loadBookings, updateSession, loadSession
         }
       >
         <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboardPage bookings={bookings} session={session} />} />
-        <Route path="bookings" element={<AdminBookingsPage bookings={bookings} session={session} />} />
+        <Route
+          path="dashboard"
+          element={<AdminDashboardPage bookings={bookings} session={session} onRefresh={loadBookings} />}
+        />
+        <Route
+          path="bookings"
+          element={<AdminBookingsPage bookings={bookings} session={session} onRefresh={loadBookings} />}
+        />
         <Route
           path="approvals"
           element={<ApprovalsPage bookings={bookings} onRefresh={loadBookings} session={session} />}
