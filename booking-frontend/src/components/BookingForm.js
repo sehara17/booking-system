@@ -24,6 +24,12 @@ function BookingForm({ refresh, session }) {
       return;
     }
 
+    const normalizedAttendees = Number(attendees);
+    if (!Number.isFinite(normalizedAttendees) || normalizedAttendees < 1) {
+      setError("Attendees must be at least 1.");
+      return;
+    }
+
     try {
       setLoading(true);
       await BookingService.create(
@@ -32,7 +38,7 @@ function BookingForm({ refresh, session }) {
           startTime,
           endTime,
           purpose,
-          attendees: Number(attendees),
+          attendees: normalizedAttendees,
         },
         session
       );

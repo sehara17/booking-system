@@ -22,19 +22,20 @@ public class BookingService {
     }
 
     public Booking createBooking(Booking booking, String userEmail) {
-        validateCreateRequest(booking, userEmail);
+        String effectiveUserEmail = resolveUserEmail(userEmail, booking);
+        validateCreateRequest(booking, effectiveUserEmail);
 
         if (hasConflict(booking)) {
             throw new IllegalStateException("Conflict detected: resource is already booked in this time slot.");
         }
 
-        booking.setUserEmail(userEmail);
+        booking.setUserEmail(effectiveUserEmail);
         booking.setStatus(BookingStatus.PENDING);
         booking.setRejectionReason(null);
         booking.setCancelReason(null);
         Booking saved = bookingRepository.save(booking);
-        notificationService.send("admin@booking.local", "New booking request submitted by " + userEmail);
-        notificationService.send(userEmail, "Your booking request #" + saved.getId() + " was submitted and is pending review.");
+        notificationService.send("admin@booking.local", "New booking request submitted by " + effectiveUserEmail);
+        notificationService.send(effectiveUserEmail, "Your booking request #" + saved.getId() + " was submitted and is pending review.");
         return saved;
     }
 
@@ -251,6 +252,18 @@ public class BookingService {
         if (booking.getAttendees() <= 0) {
             throw new IllegalArgumentException("Attendees must be at least 1.");
         }
+    }
+
+    private String resolveUserEmail(String headerEmail, Booking booking) {
+        if (headerEmail != null && !headerEmail.isBlank()) {
+            return headerEmail.trim();
+        }
+
+        if (booking != null && booking.getUserEmail() != null && !booking.getUserEmail().isBlank()) {
+            return booking.getUserEmail().trim();
+        }
+
+        return "user@booking.local";
     }
 
     private void validateEditedBooking(Booking booking, Long id) {

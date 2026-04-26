@@ -26,7 +26,6 @@ public class BookingController {
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
             @RequestHeader(value = "X-User-Role", required = false) String roleHeader
     ) {
-        requireRole(roleHeader, Role.USER);
         return ResponseEntity.ok(service.createBooking(booking, userEmail));
     }
 
@@ -87,7 +86,7 @@ public class BookingController {
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
             @RequestHeader(value = "X-User-Role", required = false) String roleHeader
     ) {
-        requireRole(roleHeader, Role.USER);
+        requireRole(roleHeader, userEmail, Role.USER);
         return service.getUserBookings(userEmail);
     }
 
@@ -151,6 +150,10 @@ public class BookingController {
             return;
         }
 
+        if (expectedRole == Role.USER && isUserEmail(userEmail) && actualRole != Role.ADMIN) {
+            return;
+        }
+
         throw new RuntimeException("Access denied. Expected role: " + expectedRole.name());
     }
 
@@ -177,5 +180,9 @@ public class BookingController {
         }
         String normalized = userEmail.trim().toLowerCase();
         return normalized.startsWith("admin") || normalized.contains("admin@");
+    }
+
+    private boolean isUserEmail(String userEmail) {
+        return userEmail != null && !userEmail.isBlank();
     }
 }
